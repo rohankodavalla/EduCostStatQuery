@@ -1,0 +1,152 @@
+To implement the given code as a gRPC service, you need to follow the steps below:
+
+Define the Protocol Buffer file:
+Create a .proto file with the service and message definitions. For example:
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.assign.app";
+option java_outer_classname = "EduCostStatQueryTwoProto";
+
+service EduCostStatQueryTwoService {
+    rpc QueryTop5ExpensiveStates (QueryTop5ExpensiveStatesRequest) returns (QueryTop5ExpensiveStatesResponse) {}
+}
+
+message QueryTop5ExpensiveStatesRequest {
+    int32 year = 1;
+    string type = 2;
+    string length = 3;
+}
+
+message QueryTop5ExpensiveStatesResponse {
+    repeated QueryResult query_result = 1;
+
+    message QueryResult {
+        string state = 1;
+        double total_expense = 2;
+    }
+}
+---------------------------------------------------------------------------------------------------------------------------
+
+Generate the code:
+Generate the code using the protoc compiler. For example:
+
+protoc --java_out=./src/main/java ./edu_cost_stat_query_two.proto
+---------------------------------------------------------------------------------------------------------------------------
+Implement the service:
+Implement the service logic in the generated stub class. For example:
+
+package com.assign.app;
+
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Filters;
+import org.bson.Document;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class EduCostStatQueryTwoServiceImpl extends EduCostStatQueryTwoServiceGrpc.EduCostStatQueryTwoServiceImplBase {
+
+    private static final String DB_NAME = "rondb";
+    private static final String COLLECTION_NAME = "EduCostStat";
+    private static final String QUERY_COLLECTION_NAME = "EduCostStatQueryTwo";
+
+    @Override
+    public void queryTop5ExpensiveStates(QueryTop5ExpensiveStatesRequest request, StreamObserver<QueryTop5ExpensiveStatesResponse> responseObserver) {
+        // Set up MongoDB connection
+        MongoClient mongoClient = MongoClients.create("mongodb+srv://rkodava:Dimpu1997@educoststat.ioim58e.mongodb.net/?retryWrites=true&w=majority");
+        MongoDatabase database = mongoClient.getDatabase(DB_NAME);
+        MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
+        MongoCollection<Document> queryCollection = database.getCollection(QUERY_COLLECTION_NAME);
+
+        // Call the query method
+        int year = request.getYear();
+        String type = request.getType();
+        String length = request.getLength();
+        Document queryResult = queryTop5ExpensiveStates(year, type, length, collection, queryCollection);
+
+        // Convert the query result to the response message
+        QueryTop5ExpensiveStatesResponse.Builder responseBuilder = QueryTop5ExpensiveStatesResponse.newBuilder();
+        for (Object o : queryResult) {
+            Document doc = (Document) o;
+            String state = doc.getString("_id");
+            double totalExpense = doc.getDouble("totalExpense");
+            QueryTop5ExpensiveStatesResponse.QueryResult queryResultMsg = QueryTop5ExpensiveStatesResponse.QueryResult.newBuilder()
+                    .setState(state)
+                    .setTotalExpense(totalExpense)
+                    .build();
+            responseBuilder.addQueryResult(queryResultMsg);
+        }
+
+        // Send the response message to the client
+        QueryTop5ExpensiveStatesResponse response = responseBuilder.build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
+        // Close MongoDB connection
+        mongoClient.close();
+    }
+
+    public static Document queryTop5ExpensiveStates(int year, String type, String length, MongoCollection<Document> collection, MongoCollection<Document> queryCollection) {
+// Check if the query already exists in the query collection
+Document queryDoc = queryCollection.find(Filters.and(
+Filters.eq("year", year),
+Filters.eq("type", type),
+Filters.eq("length", length)
+)).first();
+if (queryDoc != null) {
+return queryDoc;
+}
+    // Query the top 5 most expensive states
+    List<Object> queryResult = collection.aggregate(Arrays.asList(
+        Aggregates.match(
+                Filters.and(
+                        Filters.eq("year", year),
+                        Filters.eq("type", type),
+                        Filters.eq("length", length)
+                )
+        ),
+        Aggregates.group(
+                "$state",
+                Accumulators.sum("totalExpense", "$Value")
+        ),
+        Aggregates.sort(
+                new Document("totalExpense", -1)
+        ),
+        Aggregates.limit(5)
+)).into(new ArrayList<>());
+
+    // Create a new query document with the query parameters and the query result
+    Document queryDocToInsert = new Document()
+            .append("year", year)
+            .append("type", type)
+            .append("length", length)
+            .append("result", queryResult);
+
+    // Insert the query document into the query collection
+    queryCollection.insertOne(queryDocToInsert);
+
+    return queryDocToInsert;
+}
+}
+
+---------------------------------------------------------------------------------------------------------------------------
+Yes, the code above implements a gRPC service.
+
+The class EduCostStatQueryTwoServiceImpl extends EduCostStatQueryTwoServiceGrpc.EduCostStatQueryTwoServiceImplBase, 
+which is generated by the 
+gRPC compiler and provides the base implementation for the service. The methods in EduCostStatQueryTwoServiceImpl are 
+the actual implementation of the gRPC service's methods.
+
+The gRPC service method implemented in the code is queryTop5ExpensiveStates, which takes a QueryTop5ExpensiveStatesRequest 
+and returns a QueryTop5ExpensiveStatesResponse. The method also takes a StreamObserver as a parameter to send the response back
+to the client.
+
+The implementation of queryTop5ExpensiveStates connects to a MongoDB database, performs a query, and returns the results 
+to the client as a QueryTop5ExpensiveStatesResponse. Therefore, the code is a gRPC service implementation that uses a MongoDB database.

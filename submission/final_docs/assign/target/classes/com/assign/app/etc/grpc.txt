@@ -1,0 +1,44 @@
+To implement the code below as a gRPC service, you would need to follow these steps:
+
+Define the gRPC service and message types using Protocol Buffers.
+Implement the service logic in the gRPC service implementation class.
+Start the gRPC server to listen for incoming requests.
+
+
+To generate code using the protoc compiler, you need to follow the following steps:
+
+Install protoc compiler: You can download and install the protoc compiler from the official 
+website https://github.com/protocolbuffers/protobuf/releases
+
+Define your protobuf file: You need to define your protobuf file with the message types and their fields. For example:
+
+
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryTop5CheapestStatesRequest {
+  int32 year = 1;
+  string type = 2;
+  string length = 3;
+}
+
+message QueryResult {
+  string state = 1;
+  double total_expense = 2;
+}
+
+message QueryTop5CheapestStatesResponse {
+  repeated QueryResult query_result = 1;
+}
+
+
+Run protoc compiler command: After defining the protobuf file, you need to run the protoc compiler command 
+to generate the code. The command should include the input file and the output directory. 
+For example:
+
+protoc --proto_path=./ --java_out=./src/main/java ./edu_cost_stat.proto
+This command generates Java code for the protobuf file edu_cost_stat.proto in the src/main/java directory.
+
+Note: The --proto_path option specifies the directory where the input protobuf file is located. 
+The --java_out option specifies the directory where the generated Java code should be placed.

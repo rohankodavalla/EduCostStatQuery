@@ -1,0 +1,115 @@
+here is an example client code that communicates with the gRPC server and makes RPC calls for all five queries:
+
+package com.assign.app;
+
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+
+public class EduCostStatClient {
+    private final ManagedChannel channel;
+    private final EduCostStatQueryOneGrpc.EduCostStatQueryOneBlockingStub queryOneStub;
+    private final EduCostStatQueryTwoGrpc.EduCostStatQueryTwoBlockingStub queryTwoStub;
+    private final EduCostStatQueryThreeGrpc.EduCostStatQueryThreeBlockingStub queryThreeStub;
+    private final EduCostStatQueryFourGrpc.EduCostStatQueryFourBlockingStub queryFourStub;
+    private final EduCostStatQueryFiveGrpc.EduCostStatQueryFiveBlockingStub queryFiveStub;
+
+    public EduCostStatClient(String host, int port) {
+        this(ManagedChannelBuilder.forAddress(host, port)
+                .usePlaintext()
+                .build());
+    }
+
+    public EduCostStatClient(ManagedChannel channel) {
+        this.channel = channel;
+        this.queryOneStub = EduCostStatQueryOneGrpc.newBlockingStub(channel);
+        this.queryTwoStub = EduCostStatQueryTwoGrpc.newBlockingStub(channel);
+        this.queryThreeStub = EduCostStatQueryThreeGrpc.newBlockingStub(channel);
+        this.queryFourStub = EduCostStatQueryFourGrpc.newBlockingStub(channel);
+        this.queryFiveStub = EduCostStatQueryFiveGrpc.newBlockingStub(channel);
+    }
+
+    public void shutdown() throws InterruptedException {
+        channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+    }
+
+    public void queryOne(String region) {
+        EduCostStatQueryOneRequest request = EduCostStatQueryOneRequest.newBuilder()
+                .setRegion(region)
+                .build();
+
+        EduCostStatQueryOneResponse response = queryOneStub.queryRegionAverageExpense(request);
+
+        System.out.println("Query One Response: " + response.getResult());
+    }
+
+    public void queryTwo(String type) {
+        EduCostStatQueryTwoRequest request = EduCostStatQueryTwoRequest.newBuilder()
+                .setType(type)
+                .build();
+
+        EduCostStatQueryTwoResponse response = queryTwoStub.queryTypeAverageExpense(request);
+
+        System.out.println("Query Two Response: " + response.getResult());
+    }
+
+    public void queryThree(int year, String region) {
+        EduCostStatQueryThreeRequest request = EduCostStatQueryThreeRequest.newBuilder()
+                .setYear(year)
+                .setRegion(region)
+                .build();
+
+        EduCostStatQueryThreeResponse response = queryThreeStub.queryRegionTuitionFees(request);
+
+        System.out.println("Query Three Response: " + response.getResult());
+    }
+
+    public void queryFour(String type, String length) {
+        EduCostStatQueryFourRequest request = EduCostStatQueryFourRequest.newBuilder()
+                .setType(type)
+                .setLength(length)
+                .build();
+
+        EduCostStatQueryFourResponse response = queryFourStub.queryTypeLengthTuitionFees(request);
+
+        System.out.println("Query Four Response: " + response.getResult());
+    }
+
+    public void queryFive(int year, String type, String length, String... regions) {
+        EduCostStatQueryFiveRequest request = EduCostStatQueryFiveRequest.newBuilder()
+                .setYear(year)
+                .setType(type)
+                .setLength(length)
+                .addAllRegions(Arrays.asList(regions))
+                .build();
+
+        EduCostStatQueryFiveResponse response = queryFiveStub.queryRegionAverageExpense(request);
+
+        System.out.println("Query Five Response: " + response.getResult());
+    }
+
+    public static void main(String[] args) throws Exception {
+        EduCostStatClient client = new EduCostStatClient(String host, int port);
+            try {
+        // create a client
+        client = new EduCostStatClient("localhost", 50051);
+
+        // run query one
+        client.queryOne("Midwest");
+
+        // run query two
+        client.queryTwo("Private");
+
+        // run query three
+        client.queryThree(2019, "West");
+
+        // run query four
+        client.queryFour("Public", "4 Years");
+
+        // run query five
+        client.queryFive(2020, "Private", "2 Years", "Northeast", "South");
+    } finally {
+        // shutdown client
+        client.shutdown();
+    }
+}
+}

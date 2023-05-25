@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryThreeRequest {
+    int32 year = 1;
+    string type = 2;
+    string length = 3;
+}
+
+message QueryThreeResponse {
+    repeated StateExpensePair state_expense_pairs = 1;
+
+    message StateExpensePair {
+        string state = 1;
+        double expense = 2;
+    }
+}
+
+service EduCostStatQueryThree {
+    rpc queryEconomicStates(QueryThreeRequest) returns (QueryThreeResponse);
+}

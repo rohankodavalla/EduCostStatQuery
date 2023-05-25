@@ -1,0 +1,89 @@
+package com.assign.app;
+
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Filters;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import io.grpc.stub.StreamObserver;
+
+public class EduCostStatQueryFiveImpl extends EduCostStatQueryFiveGrpc.EduCostStatQueryFiveImplBase {
+
+    private static final String DB_NAME = "rondb";
+    private static final String COLLECTION_NAME = "EduCostStat";
+    private static final String QUERY_COLLECTION_NAME = "EduCostStatQueryFive";
+    private static final MongoClient mongoClient = MongoClients.create("mongodb+srv://rkodava:Dimpu1997@educoststat.ioim58e.mongodb.net/?retryWrites=true&w=majority");
+
+    @Override
+    public void queryRegionAverageExpense(EduCostStatQueryFiveRequest request, StreamObserver<EduCostStatQueryFiveResponse> responseObserver) {
+        // Get the request parameters
+        int year = request.getYear();
+        String type = request.getType();
+        String length = request.getLength();
+        String[] regions = request.getRegionsList().toArray(new String[0]);
+
+        // Set up the MongoDB connection and get the collections
+        MongoDatabase database = mongoClient.getDatabase(DB_NAME);
+        MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
+        MongoCollection<Document> queryCollection = database.getCollection(QUERY_COLLECTION_NAME);
+
+        // Call the query method
+        Document queryResult = queryRegionAverageExpense(year, type, length, regions, collection, queryCollection);
+
+        // Create the response message
+        EduCostStatQueryFiveResponse.Builder responseBuilder = EduCostStatQueryFiveResponse.newBuilder();
+        responseBuilder.setResult(queryResult.toJson());
+
+        // Send the response
+        responseObserver.onNext(responseBuilder.build());
+        responseObserver.onCompleted();
+    }
+
+    private Document queryRegionAverageExpense(int year, String type, String length, String[] regions, MongoCollection<Document> collection, MongoCollection<Document> queryCollection) {
+        // Check if the query already exists in the query collection
+        Document queryDoc = queryCollection.find(Filters.and(
+                Filters.eq("year", year),
+                Filters.eq("type", type),
+                Filters.eq("length", length),
+                Filters.eq("regions", Arrays.toString(regions))
+        )).first();
+        if (queryDoc != null) {
+            return queryDoc;
+        }
+
+        // Aggregate the region's average overall expense for the given year, type, and length
+        List<Bson> pipeline = new ArrayList<>();
+        pipeline.add(Aggregates.match(Filters.and(
+                Filters.eq("year", year),
+                Filters.eq("type", type),
+                Filters.eq("length", length),
+                Filters.in("region", Arrays.asList(regions))
+        )));
+        pipeline.add(Aggregates.group("$region", Accumulators.avg("averageExpense", "$overallExpense")));
+pipeline.add(Aggregates.project(new Document("_id", 0)
+.append("region", "$_id")
+.append("averageExpense", 1)));
+    // Execute the pipeline and get the result
+    List<Document> result = collection.aggregate(pipeline).into(new ArrayList<>());
+
+    // Create the query document and insert it into the query collection
+    queryDoc = new Document()
+            .append("year", year)
+            .append("type", type)
+            .append("length", length)
+            .append("regions", Arrays.toString(regions))
+            .append("result", result);
+    queryCollection.insertOne(queryDoc);
+
+    return queryDoc;
+}
+}

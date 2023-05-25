@@ -1,0 +1,147 @@
+To develop the Java program as gRPC services, 
+we need to first define the service definition using Protocol Buffers. Here is an example of how we can define the service:
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.assign.app";
+option java_outer_classname = "EduCostStatQueryOneProto";
+
+service EduCostStatQueryOneService {
+  rpc queryCost(QueryRequest) returns (QueryResponse) {}
+}
+
+message QueryRequest {
+  int32 year = 1;
+  string state = 2;
+  string type = 3;
+  string length = 4;
+  string expense = 5;
+}
+
+message QueryResponse {
+  int32 year = 1;
+  string state = 2;
+  string type = 3;
+  string length = 4;
+  string expense = 5;
+  double cost = 6;
+}
+---------------------------------------------------------------------------------------------------------------------------
+Next, we need to generate the Java classes from the Protocol Buffers file using the protoc compiler. 
+Here is an example of how we can generate the classes:
+
+//$ protoc --proto_path=src/main/proto --java_out=src/main/java src/main/proto/EduCostStatQueryOne.proto
+
+//protoc --java_out=/Users/rohankodavalla/Desktop/STUDY/winter23/6731-distributed/assign-2/final\ docs/assign/src/main/java /Users/rohankodavalla/Desktop/STUDY/winter23/6731-distributed/assign-2/final\ docs/assign/src/main/java/com/query1.proto
+
+
+(base) rohankodavalla@Rohans-MacBook-Air final_docs % /Users/rohankodavalla/Downloads/protoc-22.2-osx-x86_64/bin/protoc --java_out=. --proto_path=/Users/rohankodavalla/Desktop/STUDY/winter23/6731-distributed/assign-2/final_docs/assign/src/main/java/com /Users/rohankodavalla/Desktop/STUDY/winter23/6731-distributed/assign-2/final_docs/assign/src/main/java/com/query5.proto
+
+Once we have the generated Java classes, we can implement the gRPC service by extending the 
+EduCostStatQueryOneServiceGrpc class and overriding the queryCost method. Here is an example of how we can implement the service:
+---------------------------------------------------------------------------------------------------------------------------
+package com.assign.app;
+
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import org.bson.Document;
+
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+
+public class EduCostStatQueryOneServer {
+    private static final String DB_NAME = "rondb";
+    private static final String COLLECTION_NAME = "EduCostStat";
+    private static final String QUERY_COLLECTION_NAME = "EduCostStatQueryOne";
+
+    public static void main(String[] args) throws Exception {
+        Server server = ServerBuilder.forPort(9090)
+                .addService(new EduCostStatQueryOneServiceImpl())
+                .build();
+        server.start();
+        server.awaitTermination();
+    }
+
+    private static class EduCostStatQueryOneServiceImpl extends EduCostStatQueryOneServiceGrpc.EduCostStatQueryOneServiceImplBase {
+        private final MongoClient mongoClient;
+        private final MongoDatabase database;
+        private final MongoCollection<Document> collection;
+        private final MongoCollection<Document> queryCollection;
+
+        public EduCostStatQueryOneServiceImpl() {
+            // Set up MongoDB connection
+            mongoClient = MongoClients.create("mongodb+srv://rkodava:Dimpu1997@educoststat.ioim58e.mongodb.net/?retryWrites=true&w=majority");
+            database = mongoClient.getDatabase(DB_NAME); 
+            collection = database.getCollection(COLLECTION_NAME);
+            queryCollection = database.getCollection(QUERY_COLLECTION_NAME);
+        }
+
+        @Override
+        public void queryCost(QueryRequest request, StreamObserver<QueryResponse> responseObserver) {
+            // Check if the query already exists in the query collection
+            Document queryDoc = queryCollection.find(Filters.and(
+                    Filters.eq("year", request.getYear()),
+                    Filters.eq("state", request.getState()),
+                    Filters.eq("type", request.getType()),
+                    Filters.eq("length", request.getLength()),
+                    Filters.eq("expense", request.getExpense())
+            )).first();
+            if (queryDoc != null) {
+                QueryResponse response = QueryResponse.newBuilder()
+                        .setYear(request.getYear())
+                        .setState(request.getState())
+                        .setType(request.getType())
+                        .setLength(request.getLength())
+                        .setExpense(request.getExpense())
+                        .setCost(queryDoc.getDouble(request.getExpense()))
+                        .build();
+                        responseObserver.onNext(response);
+                        responseObserver.onCompleted();
+                        return;
+        }
+                    // Query the cost from the EduCostStat collection
+        Document costDoc = collection.find(Filters.and(
+                Filters.eq("year", request.getYear()),
+                Filters.eq("state", request.getState()),
+                Filters.eq("type", request.getType()),
+                Filters.eq("length", request.getLength())
+        )).first();
+
+        // Create a new query document with the query parameters and the query result
+        Document queryResult = new Document()
+                .append("year", request.getYear())
+                .append("state", request.getState())
+                .append("type", request.getType())
+                .append("length", request.getLength())
+                .append("expense", request.getExpense())
+                .append("cost", costDoc.getDouble(request.getExpense()));
+
+        // Insert the new query document into the query collection
+        queryCollection.insertOne(queryResult);
+
+        // Create and send the response
+        QueryResponse response = QueryResponse.newBuilder()
+                .setYear(request.getYear())
+                .setState(request.getState())
+                .setType(request.getType())
+                .setLength(request.getLength())
+                .setExpense(request.getExpense())
+                .setCost(queryResult.getDouble(request.getExpense()))
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+}
+}
+
+Yes, the above code is implementing a gRPC service. The EduCostStatQueryOneServer class creates a gRPC server on port 9090 
+and registers an instance of EduCostStatQueryOneServiceImpl with the server as a service. The EduCostStatQueryOneServiceImpl class 
+extends EduCostStatQueryOneServiceGrpc.EduCostStatQueryOneServiceImplBase which is a generated abstract class from the 
+gRPC .proto file. The queryCost method in EduCostStatQueryOneServiceImpl defines the service method for the queryCost RPC 
+defined in the .proto file. 
+Therefore, the code implements a gRPC service based on the EduCostStatQueryOne service definition in the .proto file.

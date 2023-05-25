@@ -1,0 +1,139 @@
+Sure, here are the Protocol Buffers definition files for each of the five queries:
+
+Query One OK 
+
+
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryOneRequest {
+    int32 year = 1;
+    string state = 2;
+    string type = 3;
+    string length = 4;
+    string expense = 5;
+}
+
+message QueryOneResponse {
+    int32 year = 1;
+    string state = 2;
+    string type = 3;
+    string length = 4;
+    string expense = 5;
+    double cost = 6;
+}
+
+service EduCostStatQueryOne {
+    rpc QueryCost(QueryOneRequest) returns (QueryOneResponse);
+}
+
+--------------------------------------------------------
+
+
+Query Two OK 
+
+
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryTwoRequest {
+    int32 year = 1;
+    string type = 2;
+    string length = 3;
+}
+
+message QueryTwoResponse {
+    repeated StateExpensePair state_expense_pairs = 1;
+
+    message StateExpensePair {
+        string state = 1;
+        double expense = 2;
+    }
+}
+
+service EduCostStatQueryTwo {
+    rpc QueryTopExpensiveStates(QueryTwoRequest) returns (QueryTwoResponse);
+}
+
+--------------------------------------------------------
+
+Query Three OK 
+
+
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryThreeRequest {
+    int32 year = 1;
+    string type = 2;
+    string length = 3;
+}
+
+message QueryThreeResponse {
+    repeated StateExpensePair state_expense_pairs = 1;
+
+    message StateExpensePair {
+        string state = 1;
+        double expense = 2;
+    }
+}
+
+service EduCostStatQueryThree {
+    rpc QueryTopEconomicStates(QueryThreeRequest) returns (QueryThreeResponse);
+}
+
+--------------------------------------------------------
+Query Four
+
+
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryFourRequest {
+    repeated int32 years = 1;
+    int32 year = 2;
+    string type = 3;
+    string length = 4;
+}
+
+message QueryFourResponse {
+    repeated StateGrowthPair state_growth_pairs = 1;
+
+    message StateGrowthPair {
+        string state = 1;
+        double growth_rate = 2;
+    }
+}
+
+service EduCostStatQueryFour {
+    rpc QueryHighestGrowthStates(QueryFourRequest) returns (QueryFourResponse); //rpc StoreTopGrowthRateStates(QueryFourRequest) returns (google.protobuf.Empty); 
+}
+
+--------------------------------------------------------
+
+
+Query Five
+
+
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryFiveRequest {
+    int32 year = 1;
+    string type = 2;
+    string length = 3;
+}
+
+message QueryFiveResponse {
+    double average_expense = 1;
+}
+
+service EduCostStatQueryFive {
+    rpc AggregateRegionExpense(QueryFiveRequest) returns (QueryFiveResponse);
+}
+//Please note that you may need to modify the fields or add additional fields to better represent the request and response for each query.

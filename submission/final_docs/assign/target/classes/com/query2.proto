@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryTwoRequest {
+    int32 year = 1;
+    string type = 2;
+    string length = 3;
+}
+
+message QueryTwoResponse {
+    repeated StateExpensePair state_expense_pairs = 1;
+
+    message StateExpensePair {
+        string state = 1;
+        double expense = 2;
+    }
+}
+
+service EduCostStatQueryTwo {
+    rpc queryTop5ExpensiveStates(QueryTwoRequest) returns (QueryTwoResponse);
+}

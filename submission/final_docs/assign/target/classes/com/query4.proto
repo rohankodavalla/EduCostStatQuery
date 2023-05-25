@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryFourRequest {
+    repeated int32 years = 1;
+    int32 year = 2;
+    string type = 3;
+    string length = 4;
+}
+
+message QueryFourResponse {
+    repeated StateGrowthPair state_growth_pairs = 1;
+
+    message StateGrowthPair {
+        string state = 1;
+        double growth_rate = 2;
+    }
+}
+
+service EduCostStatQueryFour {
+    rpc queryTop5HighestGrowthRateStates(QueryFourRequest) returns (QueryFourResponse); //rpc StoreTopGrowthRateStates(QueryFourRequest) returns (google.protobuf.Empty); 
+}

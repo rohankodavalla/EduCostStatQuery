@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package edu_cost_stat;
+
+message QueryFiveRequest {
+    int32 year = 1;
+    string type = 2;
+    string length = 3;
+}
+
+message QueryFiveResponse {
+    double average_expense = 1;
+}
+
+service EduCostStatQueryFive {
+    rpc queryRegionAverageExpense(QueryFiveRequest) returns (QueryFiveResponse);
+}
