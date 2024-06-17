@@ -30,26 +30,27 @@ This project focuses on practicing (1) RPC (Remote Procedure Call) communication
 
 - Queries:
 
-1. Query the cost given specific year, state, type, length, and expense; save the result in EduCostStatQueryOne.
-2. Query the top 5 most expensive states given a year, type, and length; save the result in EduCostStatQueryTwo.
-3. Query the top 5 most economic states given a year, type, and length; save the result in EduCostStatQueryThree.
-4. Query the top 5 states with the highest growth rate of overall expense given a range of past years; save the result in EduCostStatQueryFour.
-5. Aggregate region’s average overall expense for a given year, type, and length; save the result in EduCostStatQueryFive.
+    1. Query the cost given specific year, state, type, length, and expense; save the result in EduCostStatQueryOne.
+    2. Query the top 5 most expensive states given a year, type, and length; save the result in EduCostStatQueryTwo.
+    3. Query the top 5 most economic states given a year, type, and length; save the result in EduCostStatQueryThree.
+    4. Query the top 5 states with the highest growth rate of overall expense given a range of past years; save the result in EduCostStatQueryFour.
+    5. Aggregate region’s average overall expense for a given year, type, and length; save the result in EduCostStatQueryFive.
    
 - Task 2: Data Communication Interface Definition and Service Implementation
   
-1. Protocol Buffers Definition:
-Define a Protocol Buffers file to represent the request, response, and service for each query.
-
-2.gRPC Services:
-Develop Java programs for each service defined in the Protocol Buffers file, implementing them as gRPC services. These services invoke the corresponding data access object classes developed in Task 1.
-
-3.gRPC Client and Server:
-Develop gRPC client and server (or gateway) code to facilitate RPC calls for the five queries defined in Task 1.
+    1. Protocol Buffers Definition:
+    Define a Protocol Buffers file to represent the request, response, and service for each query.
+    
+    2.gRPC Services:
+    Develop Java programs for each service defined in the Protocol Buffers file, implementing them as gRPC services. These services invoke the corresponding data access object classes developed in Task 1.
+    
+    3.gRPC Client and Server:
+    Develop gRPC client and server (or gateway) code to facilitate RPC calls for the five queries defined in Task 1.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 **Result**
+
 The project successfully implements a distributed system architecture using gRPC for RPC communication and MongoDB for data storage and operations. 
 
 Key outcomes include:
