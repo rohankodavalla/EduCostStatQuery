@@ -21,12 +21,12 @@ This project focuses on practicing (1) RPC (Remote Procedure Call) communication
 
 - Task 1: MongoDB Data Storage and Operation
   
-1. Data Storage:
-Create a MongoDB collection named EduCostStat to store the dataset.
-Read the data from the downloaded file (Excel or CSV) and store it in the MongoDB online cluster.
-
-2. Data Access Objects:
-Develop data access objects in Java for different queries, ensuring no duplication of queries as new documents.
+    1. Data Storage:
+    Create a MongoDB collection named EduCostStat to store the dataset.
+    Read the data from the downloaded file (Excel or CSV) and store it in the MongoDB online cluster.
+    
+    2. Data Access Objects:
+    Develop data access objects in Java for different queries, ensuring no duplication of queries as new documents.
 
 - Queries:
 
